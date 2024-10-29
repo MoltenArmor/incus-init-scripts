@@ -1,0 +1,103 @@
+#!/bin/sh -ue
+
+### BEGIN INIT INFO
+# Short-Description:    System container and VM manager
+# Description:          System container and VM manager
+# Provides:             incus
+# Required-Start:       $remote_fs $network lxcfs
+# Required-Stop:        $remote_fs $network lxcfs
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+### END INIT INFO
+
+# WARNING:
+# This script has not been tested on hosts with cgroup v1.
+# The host system must have a cgroup v2 hierarchy mounted.
+
+DAEMON=/usr/libexec/incus/incusd
+NAME=incus
+DESC="System container and VM manager"
+PIDFILE=/run/incus.pid
+
+# Import log_* functions.
+. /lib/lsb/init-functions
+
+# Load environment vars.
+[ -e /etc/environment ] && . /etc/environment
+
+# Load default config.
+[ -e /etc/default/incus ] && . /etc/default/incus
+
+# Just exit if incusd does not exist or is not excutable.
+[ -x ${DAEMON} ] || exit 0
+
+do_start() {
+    /usr/libexec/incus/incus-apparmor-load
+
+    # shellcheck disable=SC3045
+    # LimitNOFILE=1048576
+    ulimit -n 1048576
+    # ulimit of dash does not support -u,
+    # so try to use prlimit provided by util-linux.
+    # LimitNPROC=infinity
+    ulimit -u unlimited > /dev/null 2>&1 || [ -x /usr/bin/prlimit ] && /usr/bin/prlimit --nproc=unlimited --pid="$$"
+
+    if [ "${USE_SYSLOG:-no}" = 'no' ]; then
+        [ -d /var/log/incus ] || mkdir -p /var/log/incus && chown -R root:incus-admin /var/log/incus
+        start-stop-daemon -m --start --quiet --pidfile "${PIDFILE}" \
+        --exec "${DAEMON}" --background -- --group=incus --logfile=/var/log/incus/incus.log > /dev/null 2>&1
+    else
+        start-stop-daemon -m --start --quiet --pidfile "${PIDFILE}" \
+        --exec "${DAEMON}" --background -- --group=incus --syslog > /dev/null 2>&1
+    fi
+}
+
+case "${1:-}" in
+    start)
+        printf '%s' "Starting ${DESC}: ${NAME}"
+
+        if do_start; then
+            log_success_msg
+            # Wait for the daemon to get ready.
+            [ -x /usr/bin/incus ] && /usr/bin/incus admin waitready --timeout=600
+        else
+            if start-stop-daemon --test -m --start --quiet --pidfile "${PIDFILE}" --exec "${DAEMON}" --background >/dev/null 2>&1; then
+                log_failure_msg
+                exit 1
+            else
+                log_failure_msg " already running"
+                exit 0
+            fi
+        fi
+
+        exit 0
+        ;;
+    stop)
+        log_daemon_msg "Stopping ${DESC}" "${NAME}"
+        if start-stop-daemon --stop --quiet --pidfile "${PIDFILE}" \
+            --exec "${DAEMON}" --retry 10 > /dev/null 2>&1 ; then
+                log_success_msg
+        else
+            if start-stop-daemon --test -m --start --quiet --pidfile "${PIDFILE}" --exec "${DAEMON}" --background >/dev/null 2>&1; then
+                log_failure_msg " not running"
+                exit 0
+            else
+                log_failure_msg
+                exit 1
+            fi
+        fi
+
+        exit 0
+        ;;
+    status)
+        status_of_proc -p "${PIDFILE}" "${DAEMON}" incus
+        ;;
+    restart|force-reload)
+        "$0" stop
+        exec "$0" start
+        ;;
+    *)
+        printf '%s\n' "Usage: $0 {start|stop|status|restart|force-reload}" 1>&2
+        exit 1
+        ;;
+esac

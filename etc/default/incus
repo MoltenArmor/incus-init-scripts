@@ -1,0 +1,4 @@
+PATH=/usr/libexec/incus:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Make incusd use syslog instead of directly writing log to /var/log/incus/incus.log
+USE_SYSLOG=no
