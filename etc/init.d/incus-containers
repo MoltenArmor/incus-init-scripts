@@ -23,7 +23,7 @@ NAME=incus-containers
 case "${1:-}" in
     start)
         printf '%s' "Starting ${DESC}: ${NAME}"
-        if [ -x /usr/libexec/incus/incusd ] && /usr/libexec/incus/incusd activateifneeded > /dev/null 2>&1 ; then
+        if [ -x /usr/libexec/incus/incusd ] && /usr/libexec/incus/incusd activateifneeded > /dev/null 2>&1; then
             log_success_msg
         else
             log_failure_msg
@@ -34,7 +34,7 @@ case "${1:-}" in
         ;;
     stop)
         printf '%s' "Stopping ${DESC}: ${NAME}"
-        if [ -x /usr/libexec/incus/shutdown ] && /usr/libexec/incus/shutdown > /dev/null 2>&1 ; then
+        if [ -x /usr/libexec/incus/shutdown ] && /usr/libexec/incus/shutdown > /dev/null 2>&1; then
             log_success_msg
         else
             log_failure_msg
