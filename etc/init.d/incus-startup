@@ -15,7 +15,7 @@
 # The host system must have a cgroup v2 hierarchy mounted.
 
 DESC='System containers startup/shutdown'
-NAME=incus-containers
+NAME=incus-startup
 
 # Import log_* functions.
 . /lib/lsb/init-functions
