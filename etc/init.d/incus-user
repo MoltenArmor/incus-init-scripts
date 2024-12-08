@@ -1,0 +1,82 @@
+#!/bin/sh -ue
+
+### BEGIN INIT INFO
+# Short-Description:    Incus - User daemon
+# Description:          Incus - User daemon
+# Provides:             incus-user
+# Required-Start:       incus
+# Required-Stop:        incus
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+### END INIT INFO
+
+# WARNING:
+# This script has not been tested on hosts with cgroup v1.
+# The host system must have a cgroup v2 hierarchy mounted.
+
+DAEMON=/usr/libexec/incus/incus-user
+DESC='Incus - User daemon'
+NAME=incus-user
+PIDFILE=/run/incus-user.pid
+
+# Import log_* functions.
+. /lib/lsb/init-functions
+
+# Load environment vars.
+[ -e /etc/environment ] && . /etc/environment
+
+# Load default config.
+[ -e /etc/default/incus ] && . /etc/default/incus
+
+# Just exit if incusd does not exist or is not excutable.
+[ -x "${DAEMON}" ] || exit 0
+
+case "${1:-}" in
+    start)
+        printf '%s' "Starting ${DESC}: ${NAME}"
+        if start-stop-daemon -m --start --quiet --pidfile "${PIDFILE}" \
+            --exec "${DAEMON}" --background -- --group=incus > /dev/null 2>&1; then
+            log_success_msg
+        else
+            if start-stop-daemon --test -m --start --quiet --pidfile "${PIDFILE}" \
+                --exec "${DAEMON}" --background > /dev/null 2>&1; then
+                log_failure_msg
+                exit 1
+            else
+                log_failure_msg " already running"
+                exit 0
+            fi
+        fi
+
+        exit 0
+        ;;
+    stop)
+        printf '%s' "Stopping ${DESC}: ${NAME}"
+        if start-stop-daemon --stop --quiet --pidfile "${PIDFILE}" \
+            --exec "${DAEMON}" --retry 10; then
+            log_success_msg
+        else
+            if start-stop-daemon --test -m --start --quiet --pidfile "${PIDFILE}" \
+                --exec "${DAEMON}" --background >/dev/null 2>&1; then
+                log_failure_msg " not running"
+                exit 0
+            else
+                log_failure_msg
+                exit 1
+            fi
+        fi
+
+        exit 0
+        ;;
+    status)
+        status_of_proc -p "${PIDFILE}" "${DAEMON}" incus-user
+        ;;
+    restart|force-reload)
+        "$0" stop
+        exec "$0" start
+        ;;
+    *)
+        printf '%s\n' "Usage: $0 {start|stop|restart|force-reload}" 1>&2
+        exit 1
+        ;;
+esac

@@ -29,7 +29,7 @@ PIDFILE=/run/incus.pid
 [ -e /etc/default/incus ] && . /etc/default/incus
 
 # Just exit if incusd does not exist or is not excutable.
-[ -x ${DAEMON} ] || exit 0
+[ -x "${DAEMON}" ] || exit 0
 
 do_start() {
     /usr/libexec/incus/incus-apparmor-load
@@ -45,10 +45,10 @@ do_start() {
     if [ "${USE_SYSLOG:-no}" = 'no' ]; then
         [ -d /var/log/incus ] || mkdir -p /var/log/incus && chown -R root:incus-admin /var/log/incus
         start-stop-daemon -m --start --quiet --pidfile "${PIDFILE}" \
-        --exec "${DAEMON}" --background -- --group=incus --logfile=/var/log/incus/incus.log > /dev/null 2>&1
+        --exec "${DAEMON}" --background -- --group=incus-admin --logfile=/var/log/incus/incus.log > /dev/null 2>&1
     else
         start-stop-daemon -m --start --quiet --pidfile "${PIDFILE}" \
-        --exec "${DAEMON}" --background -- --group=incus --syslog > /dev/null 2>&1
+        --exec "${DAEMON}" --background -- --group=incus-admin --syslog > /dev/null 2>&1
     fi
 }
 
