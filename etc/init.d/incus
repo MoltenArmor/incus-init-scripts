@@ -1,4 +1,4 @@
-#!/bin/sh -ue
+#!/bin/dash -ue
 
 ### BEGIN INIT INFO
 # Short-Description:    System container and VM manager

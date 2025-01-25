@@ -1,4 +1,4 @@
-#!/bin/sh -ue
+#!/bin/dash -ue
 
 ### BEGIN INIT INFO
 # Short-Description:    Incus - User daemon
