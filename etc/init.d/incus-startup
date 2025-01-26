@@ -1,9 +1,9 @@
-#!/bin/sh -ue
+#!/bin/dash -ue
 
 ### BEGIN INIT INFO
 # Short-Description:    System containers startup/shutdown
 # Description:          System containers startup/shutdown
-# Provides:             incus-containers
+# Provides:             incus-startup
 # Required-Start:       incus
 # Required-Stop:        incus
 # Default-Start:        2 3 4 5
@@ -43,6 +43,10 @@ case "${1:-}" in
 
         exit 0
         ;;
+    status)
+        echo "There is no long-running daemon for this service, so there is no status."
+        exit 0
+    ;;
     restart|force-reload)
         "$0" stop
         exec "$0" start
