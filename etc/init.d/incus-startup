@@ -44,7 +44,7 @@ case "${1:-}" in
         exit 0
         ;;
     status)
-        echo "There is no long-running daemon for this service, so there is no status."
+        printf '%s\n' "There is no long-running daemon for this service, so there is no status."
         exit 0
     ;;
     restart|force-reload)
