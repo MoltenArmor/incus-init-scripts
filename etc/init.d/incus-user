@@ -10,10 +10,6 @@
 # Default-Stop:         0 1 6
 ### END INIT INFO
 
-# WARNING:
-# This script has not been tested on hosts with cgroup v1.
-# The host system must have a cgroup v2 hierarchy mounted.
-
 DAEMON=/usr/libexec/incus/incus-user
 DESC='Incus - User daemon'
 NAME=incus-user
